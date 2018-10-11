@@ -3,8 +3,10 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	amino "github.com/tendermint/go-amino"
 
@@ -54,6 +56,7 @@ func (err *ErrEvidenceOverflow) Error() string {
 // Evidence represents any provable malicious activity by a validator
 type Evidence interface {
 	Height() int64                                     // height of the equivocation
+	Time() time.Time                                   // when the evidence was created
 	Address() []byte                                   // address of the equivocating validator
 	Hash() []byte                                      // hash of the evidence
 	Verify(chainID string, pubKey crypto.PubKey) error // verify the evidence
@@ -97,6 +100,11 @@ func (dve *DuplicateVoteEvidence) String() string {
 // Height returns the height this evidence refers to.
 func (dve *DuplicateVoteEvidence) Height() int64 {
 	return dve.VoteA.Height
+}
+
+// Time returns the time when the evidence was created.
+func (dve *DuplicateVoteEvidence) Time() time.Time {
+	return dve.VoteA.Timestamp
 }
 
 // Address returns the address of the validator.
@@ -178,6 +186,7 @@ func NewMockGoodEvidence(height int64, idx int, address []byte) MockGoodEvidence
 }
 
 func (e MockGoodEvidence) Height() int64   { return e.Height_ }
+func (e MockGoodEvidence) Time() time.Time { return tmtime.Now() }
 func (e MockGoodEvidence) Address() []byte { return e.Address_ }
 func (e MockGoodEvidence) Hash() []byte {
 	return []byte(fmt.Sprintf("%d-%x", e.Height_, e.Address_))
